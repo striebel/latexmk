@@ -21,6 +21,7 @@
     ]
     license = "MIT"
     license-files = ["LICEN[CS]E*"]
+    dependencies = ["pygments>=2,<3"]
     
 [project.urls]
     Homepage = "https://github.com/striebel/latexmk"
