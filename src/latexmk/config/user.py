@@ -6,7 +6,7 @@ import argparse
 
 
 def get_config_file_path() -> str:
-    return os.path.join(os.path.expanduser('~'), '.latexmk.json')
+    return os.path.join(os.path.expanduser('~'), '.latexmk.global.json')
 
 
 def config_file_exists() -> bool:
@@ -23,7 +23,8 @@ def get_default_config_dict() -> dict:
         {
             'pdflatex_file_path' : '/usr/bin/pdflatex',
             'bibtex_file_path'   : '/usr/bin/bibtex',
-            'pythontex_file_path': '/usr/share/texlive/texmf-dist/scripts/pythontex/pythontex3.py'
+            'pythontex_file_path': '/usr/share/texlive/texmf-dist/scripts/pythontex/pythontex3.py',
+            'project_dir_path'   : None
         } 
     return default_config_dict
 
@@ -70,7 +71,7 @@ def get_config_dict() -> dict:
 
 
 
-def update_config_value(key, value) -> None:
+def _update_config_value(key, value) -> None:
     config_dict = get_config_dict()
 
     assert key in config_dict, key
@@ -81,22 +82,30 @@ def update_config_value(key, value) -> None:
     return write_config_file(config_dict)
     
     
-def get_config_value(key) -> str:
+def _get_config_value(key) -> str:
     config_dict = get_config_dict()
     assert key in config_dict, key
     return config_dict[key]
 
 
 def get_pdflatex_file_path() -> str:
-    return get_config_value('pdflatex_file_path')
+    return _get_config_value('pdflatex_file_path')
 
 
 def get_bibtex_file_path() -> str:
-    return get_config_value('bibtex_file_path')
+    return _get_config_value('bibtex_file_path')
 
 
 def get_pythontex_file_path() -> str:
-    return get_config_value('pythontex_file_path')
+    return _get_config_value('pythontex_file_path')
+
+
+def get_project_dir_path() -> str:
+    return _get_config_value('project_dir_path')
+
+
+def update_project_dir_path(project_dir_path) -> None:
+    _update_config_value('project_dir_path', project_dir_path)
 
 
 
@@ -130,7 +139,7 @@ def main() -> int:
     elif isinstance(args.key, str) and isinstance(args.value, str):
         # update the field indicated to the given key to the given value
 
-        update_config_value(args.key, args.value)
+        _update_config_value(args.key, args.value)
 
     else:
         raise RuntimeError(f'unexpected (key, value) pair: ({args.key}, {args.value})')
