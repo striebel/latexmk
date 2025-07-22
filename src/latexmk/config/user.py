@@ -5,12 +5,12 @@ import argparse
 
 
 
-def get_config_file_path() -> str:
+def _get_config_file_path() -> str:
     return os.path.join(os.path.expanduser('~'), '.latexmk.config.user.json')
 
 
-def config_file_exists() -> bool:
-    config_file_path = get_config_file_path()
+def _config_file_exists() -> bool:
+    config_file_path = _get_config_file_path()
     return (
         os.path.isfile(config_file_path)
         and
@@ -18,7 +18,7 @@ def config_file_exists() -> bool:
     )
 
 
-def get_default_config_dict() -> dict:
+def _get_default_config_dict() -> dict:
     default_config_dict = \
         {
             'pdflatex_file_path' : '/usr/bin/pdflatex',
@@ -29,42 +29,42 @@ def get_default_config_dict() -> dict:
     return default_config_dict
 
 
-def read_config_file() -> dict:
-    config_file_path = get_config_file_path()
+def _read_config_file() -> dict:
+    config_file_path = _get_config_file_path()
     assert os.path.isfile(config_file_path), config_file_path
     with open(config_file_path, 'rt') as config_file:
         config_dict = json.load(fp=config_file)
 
-    default_config_dict = get_default_config_dict()
+    default_config_dict = _get_default_config_dict()
     assert default_config_dict.keys() == config_dict.keys()
     del default_config_dict
 
     return config_dict
 
 
-def write_config_file(config_dict) -> None:
+def _write_config_file(config_dict) -> None:
     assert isinstance(config_dict, dict), type(config_dict)
 
-    default_config_dict = get_default_config_dict()
+    default_config_dict = _get_default_config_dict()
     assert default_config_dict.keys() == config_dict.keys()
     del default_config_dict
 
-    config_file_path = get_config_file_path()
+    config_file_path = _get_config_file_path()
     with open(config_file_path, 'wt') as config_file:
         json.dump(fp=config_file, obj=config_dict, indent=4)
     return None
 
 
-def get_config_dict() -> dict:
+def _get_config_dict() -> dict:
     global config_dict
     if 'config_dict' not in globals():
-        if config_file_exists():
-            config_dict = read_config_file()
+        if _config_file_exists():
+            config_dict = _read_config_file()
             assert isinstance(config_dict, dict), type(config_dict)
         else:
-            config_dict = get_default_config_dict()
+            config_dict = _get_default_config_dict()
             assert isinstance(config_dict, dict), type(config_dict)
-            write_config_file(config_dict)
+            _write_config_file(config_dict)
     assert 'config_dict' in globals()
     assert isinstance(config_dict, dict), type(config_dict)
     return config_dict
@@ -72,18 +72,18 @@ def get_config_dict() -> dict:
 
 
 def _update_config_value(key, value) -> None:
-    config_dict = get_config_dict()
+    config_dict = _get_config_dict()
 
     assert key in config_dict, key
     config_dict[key] = value
     del key
     del value
 
-    return write_config_file(config_dict)
+    return _write_config_file(config_dict)
     
     
 def _get_config_value(key) -> str:
-    config_dict = get_config_dict()
+    config_dict = _get_config_dict()
     assert key in config_dict, key
     return config_dict[key]
 
@@ -119,7 +119,7 @@ def main() -> int:
     args = parser.parse_args()
 
 
-    config_dict = get_config_dict()
+    config_dict = _get_config_dict()
     
     if args.key is None and args.value is None:
         # print all (key, value) pairs in the config dict
@@ -133,7 +133,7 @@ def main() -> int:
     elif isinstance(args.key, str) and args.value is None:
         # print the value pointed to by the given key
 
-        v = get_config_value(args.key)
+        v = _get_config_value(args.key)
         sys.stdout.write(f'{v}\n')
 
     elif isinstance(args.key, str) and isinstance(args.value, str):
