@@ -1,14 +1,29 @@
 import sys
 import os
 import stat
+import shutil
 
 from .config.user import get_pdflatex_file_path
 from .config.user import get_bibtex_file_path
 from .config.user import get_pythontex_file_path
 
 from .config.project import get_src_dir_path
+from .config.project import get_cache_dir_path
 from .config.project import get_build_dir_path
+from .config.project import get_build_cache_dir_path
 
+from .config.project import get_build_main_pdf_file_path
+from .config.project import get_main_pdf_file_path
+
+from .shutil import copytree_as_symlinks
+
+
+
+def build_dir_exists() -> bool:
+
+    build_dir_path = get_build_dir_path()
+
+    return os.path.isdir(build_dir_path)
 
 
 def clean_build_dir() -> None:
@@ -28,19 +43,39 @@ def clean_build_dir() -> None:
 def init_build_dir() -> None:
 
     src_dir_path = get_src_dir_path()
-
     assert os.path.isdir(src_dir_path), src_dir_path
 
-    build_dir_path = get_build_dir_path()
+    cache_dir_path = get_cache_dir_path()
+    assert os.path.isdir(cache_dir_path), cache_dir_path
 
+    build_dir_path = get_build_dir_path()
     assert not os.path.isdir(build_dir_path), build_dir_path
+
+    build_cache_dir_path = get_build_cache_dir_path()
+    assert not os.path.isdir(build_cache_dir_path)
 
     shutil.copytree(src_dir_path, build_dir_path)
 
     assert os.path.isdir(src_dir_path), src_dir_path
-
     assert os.path.isdir(build_dir_path), build_dir_path
+    assert not os.path.isdir(build_cache_dir_path), build_cache_dir_path
 
+    copytree_as_symlinks(cache_dir_path, build_cache_dir_path)
+
+    assert os.path.isdir(cache_dir_path), cache_dir_path
+    assert os.path.isdir(build_cache_dir_path), build_cache_dir_path
+
+    return None
+
+
+def update_main_pdf_file() -> None:
+    build_main_pdf_file_path = get_build_main_pdf_file_path()
+    assert os.path.isfile(build_main_pdf_file_path), build_main_pdf_file_path
+
+    main_pdf_file_path = get_main_pdf_file_path()
+    assert os.path.isfile(main_pdf_file_path), main_pdf_file_path
+
+    shutil.copy(build_main_pdf_file_path, main_pdf_file_path)
     return None
 
 

@@ -6,7 +6,7 @@ import argparse
 
 
 def get_config_file_path() -> str:
-    return os.path.join(os.path.expanduser('~'), '.latexmk.global.json')
+    return os.path.join(os.path.expanduser('~'), '.latexmk.config.user.json')
 
 
 def config_file_exists() -> bool:
