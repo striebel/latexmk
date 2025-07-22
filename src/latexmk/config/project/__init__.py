@@ -2,7 +2,7 @@ import os
 import json
 
 
-from .user import get_project_dir_path
+from ..user import get_project_dir_path
 
 
 

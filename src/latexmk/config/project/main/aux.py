@@ -1,0 +1,48 @@
+import os
+
+from .. import get_build_main_aux_file_path
+
+
+
+def atinputs(include_chapters_list, all_chapters_list) -> None:
+
+    assert isinstance(include_chapters_list, list)
+    assert isinstance(all_chapters_list, list)
+
+    assert set(include_chapters_list).issubset(all_chapters_list)
+
+    build_main_aux_file_path = get_build_main_aux_file_path()
+    assert os.path.isfile(build_main_aux_file_path), build_main_aux_file_path
+
+    with open(build_main_aux_file_path, 'rt') as build_main_aux_file:
+        build_main_aux_str = build_main_aux_file.read()
+
+    del build_main_aux_file
+
+
+    for chapter in all_chapters_list:
+        
+        a = f'\\@input{"{"}{chapter}.aux{"}"}\n'
+
+        assert a in build_main_aux_str, a
+
+        if chapter not in include_chapters_list:
+            
+            b = f'%{a}'
+            build_main_aux_str = build_main_aux_str.replace(a, b)
+    
+
+    with open(build_main_aux_file_path, 'wt') as build_main_aux_file:
+        build_main_aux_file.write(build_main_aux_str)
+
+    del build_main_aux_str
+    del build_main_aux_file
+    del build_main_aux_file_path
+    
+    return None
+
+
+
+
+
+

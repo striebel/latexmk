@@ -6,9 +6,8 @@ from .. import get_build_main_tex_file_path
 
 
 
-def title(title) -> None:
-    assert isinstance(title, str), (type(title), title)
-    assert isinstance(date, str), (type(date), date)
+def title(title_str) -> None:
+    assert isinstance(title_str, str), (type(title_str), title_str)
 
     build_main_tex_file_path = get_build_main_tex_file_path()
     assert os.path.isfile(build_main_tex_file_path), build_main_tex_file_path
@@ -17,12 +16,15 @@ def title(title) -> None:
         build_main_tex_str = build_main_tex_file.read()
 
     old_title = '\\title{Dissertation Title}'
-    new_title = f'\\title{"{"}{title}{"}"}'
+    new_title = f'\\title{"{"}{title_str}{"}"}'
+    del title_str
 
-    assert old_title in build_main_tex_str, (len(build_main_tex_str), old_title)
+    assert old_title in build_main_tex_str, (old_title, len(build_main_tex_str))
     assert 1 == build_main_tex_str.count(old_title)
 
     build_main_tex_str = build_main_tex_str.replace(old_title, new_title)
+    del old_title
+    del new_title
 
     with open(build_main_tex_file_path, 'wt') as build_main_tex_file:
         build_main_tex_file.write(build_main_tex_str)
@@ -31,9 +33,8 @@ def title(title) -> None:
 
 
 
-def date(date) -> None:
-    assert isinstance(title, str), (type(title), title)
-    assert isinstance(date, str), (type(date), date)
+def date(date_str) -> None:
+    assert isinstance(date_str, str), (type(date_str), date_str)
 
     build_main_tex_file_path = get_build_main_tex_file_path()
     assert os.path.isfile(build_main_tex_file_path), build_main_tex_file_path
@@ -42,12 +43,15 @@ def date(date) -> None:
         build_main_tex_str = build_main_tex_file.read()
 
     old_date = '\\date{Month Year}'
-    new_date = f'\\date{"{"}{date}{"}"}'
+    new_date = f'\\date{"{"}{date_str}{"}"}'
+    del date_str
     
     assert old_date in build_main_tex_str, (len(build_main_tex_str), old_date)
     assert 1 == build_main_tex_str.count(old_date)
 
     build_main_tex_str = build_main_tex_str.replace(old_date, new_date)
+    del old_date
+    del new_date
 
     with open(build_main_tex_file_path, 'wt') as build_main_tex_file:
         build_main_tex_file.write(build_main_tex_str)
@@ -56,9 +60,14 @@ def date(date) -> None:
 
 
 
-def includeonly(chapters) -> None:
-    assert isinstance(chapters, list), (chapters, type(chapters))
-    assert 1 <= len(chapters), len(chapters)
+def includeonly(include_chapters_list) -> list:
+    '''
+    Argument: list of chapters to include
+    Returns : list of all available chapters of which "include_chapters_list"
+                  will have been a subset
+    '''
+    assert isinstance(include_chapters_list, list), (include_chapters_list, type(include_chapters_list))
+    assert 1 <= len(include_chapters_list), len(include_chapters_list)
 
     build_main_tex_file_path = get_build_main_tex_file_path()
     assert os.path.isfile(build_main_tex_file_path), build_main_tex_file_path
@@ -81,9 +90,10 @@ def includeonly(chapters) -> None:
     all_chapters_list = [ch.strip() for ch in all_chapters_str.split(',')]
 
     body_str = ''
-    for ch in chapters:
+    for ch in include_chapters_list:
         assert ch in all_chapters_list, (all_chapters_list, ch)
         body_str += f'{" "*4}{ch},%\n'
+    del include_chapters_list
 
     assert ',%\n' == body_str[-3:]
     body_str = body_str[:-3] + body_str[-2:]
@@ -100,7 +110,7 @@ def includeonly(chapters) -> None:
     with open(build_main_tex_file_path, 'wt') as build_main_tex_file:
         build_main_tex_file.write(build_main_tex_str)
 
-    return None
+    return all_chapters_list
 
 
 
