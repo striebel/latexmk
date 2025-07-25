@@ -60,6 +60,42 @@ def date(date_str) -> None:
 
 
 
+def get_includeonly() -> list:
+
+    build_main_tex_file_path = get_build_main_tex_file_path()
+    assert os.path.isfile(build_main_tex_file_path), build_main_tex_file_path
+
+    with open(build_main_tex_file_path, 'rt') as build_main_tex_file:
+        build_main_tex_str = build_main_tex_file.read()
+
+    del build_main_tex_file
+    del build_main_tex_file_path
+
+    start_str = '\\includeonly{%\n'
+    end_str   = '}\n'
+
+    start_idx = build_main_tex_str.index(start_str)
+    end_idx   = build_main_tex_str.index(end_str, start_idx) + len(end_str)
+
+    all_chapters_str = build_main_tex_str[start_idx:end_idx]
+
+    del start_idx
+    del end_idx
+    del build_main_tex_str
+
+    all_chapters_str = all_chapters_str.replace(start_str, '')
+    all_chapters_str = all_chapters_str.replace(end_str  , '')
+    all_chapters_str = all_chapters_str.replace('%'      , '')
+
+    all_chapters_list = [ch.strip() for ch in all_chapters_str.split(',')]
+
+    del all_chapters_str
+
+    return all_chapters_list
+
+
+
+
 def includeonly(include_chapters_list) -> list:
     '''
     Argument: list of chapters to include
@@ -111,6 +147,111 @@ def includeonly(include_chapters_list) -> list:
         build_main_tex_file.write(build_main_tex_str)
 
     return all_chapters_list
+
+
+def _remove_comments(tex_str) -> str:
+   
+    spans = []
+
+    i = 0
+ 
+    while True:
+
+        start_idx = tex_str.find('%', i)
+
+        if -1 == start_idx:
+            break
+        
+        end_idx = tex_str.find('\n', start_idx)
+        if -1 == end_idx:
+            end_idx = len(tex_str)
+
+        spans.append((start_idx, end_idx))
+
+        i = end_idx + 1
+
+    del i
+
+    for j in range(len(spans)-1, -1, -1):
+
+        start_idx, end_idx = spans[j]
+
+        assert '%' == tex_str[start_idx]
+        assert '\n' == tex_str[end_idx] or len(spans)-1 == j
+
+        tex_str = tex_str[:start_idx] + '%\n' + tex_str[end_idx+1:]
+
+    return tex_str
+
+
+
+def get_includes() -> list:
+
+    all_chapters_list = []
+
+    build_main_tex_file_path = get_build_main_tex_file_path()
+    assert os.path.isfile(build_main_tex_file_path), build_main_tex_file_path
+
+    with open(build_main_tex_file_path, 'rt') as build_main_tex_file:
+        build_main_tex_str = build_main_tex_file.read()
+
+    del build_main_tex_file
+    del build_main_tex_file_path
+
+    start_str = '\\include{'
+    end_str   = '}'
+
+    a = build_main_tex_str; del build_main_tex_str
+
+    a = _remove_comments(a)
+
+    while True:
+        start_idx = a.find(start_str)
+
+        if -1 < start_idx:
+
+            a = a[start_idx+len(start_str):]
+
+            end_idx = a.find(end_str)
+            assert 0 < end_idx, end_idx
+
+            chapter = a[:end_idx].strip()
+
+            a = a[end_idx+len(end_str):]
+
+            all_chapters_list.append(chapter)
+        else:
+            break
+
+    return all_chapters_list
+
+
+
+def validate_all_chapters_list(all_chapters_list) -> None:
+
+    includeonly_chapters_list = get_includeonly() 
+ 
+    for ch in all_chapters_list: 
+        if not ch in includeonly_chapters_list: 
+            sys.stderr.write(f'{" "*log_indent}error: all_chapters_list contains "{ch}"\n') 
+            sys.stderr.write(f'{" "*(log_indent+4)}but includeonly_chapters_list does not:\n') 
+            for d in includeonly_chapters_list: 
+                sys.stderr.write(f'{" "*(log_indent+8)}{d}\n') 
+            sys.exit(4) 
+  
+    for ch in includeonly_chapters_list: 
+        assert ch in all_chapters_list, ch 
+ 
+    assert all_chapters_list == includeonly_chapters_list 
+ 
+    include_chapters_list = get_includes() 
+    assert all_chapters_list == include_chapters_list
+
+    return None
+
+
+
+
 
 
 
