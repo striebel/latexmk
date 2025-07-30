@@ -4,12 +4,12 @@ from .. import get_build_main_aux_file_path
 
 
 
-def atinputs(include_chapters_list, all_chapters_list) -> None:
+def set_atinputs(includeonly_chapters_list, include_chapters_list) -> None:
 
+    assert isinstance(includeonly_chapters_list, list)
     assert isinstance(include_chapters_list, list)
-    assert isinstance(all_chapters_list, list)
 
-    assert set(include_chapters_list).issubset(all_chapters_list)
+    assert set(includeonly_chapters_list).issubset(include_chapters_list)
 
     build_main_aux_file_path = get_build_main_aux_file_path()
     assert os.path.isfile(build_main_aux_file_path), build_main_aux_file_path
@@ -20,13 +20,13 @@ def atinputs(include_chapters_list, all_chapters_list) -> None:
     del build_main_aux_file
 
 
-    for chapter in all_chapters_list:
+    for chapter in include_chapters_list:
         
         a = f'\\@input{"{"}{chapter}.aux{"}"}\n'
 
         assert a in build_main_aux_str, a
 
-        if chapter not in include_chapters_list:
+        if chapter not in includeonly_chapters_list:
             
             b = f'%{a}'
             build_main_aux_str = build_main_aux_str.replace(a, b)
