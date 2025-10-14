@@ -5,6 +5,13 @@ from .. import get_build_main_aux_file_path
 
 
 def set_atinputs(includeonly_chapters_list, include_chapters_list) -> None:
+    '''
+    includeonly_chapters_list: the chapters to be included in this pdf build
+    
+    include_chapters_list    : all existing chapters in the project, which means
+                               all possible chapters that could be included in
+                               this pdf build
+    '''
 
     assert isinstance(includeonly_chapters_list, list)
     assert isinstance(include_chapters_list, list)

@@ -173,6 +173,35 @@ def assert_chapters_lists_equal(cla, clb, log_indent=0, error_exit_status=3) -> 
 
 
 
+def assert_chapters_list_is_subset_of(cla, clb, log_indent=0, error_exit_status=4) -> None:
+    '''
+    cla : chapters_list_a
+    clb : chapters_list_b
+    
+    If cla is a subset of clb, return None.
+    Otherwise, print an error message and exit
+    '''
+    assert isinstance(cla, list), type(cla)
+    assert isinstance(clb, list), type(clb)
+
+    assert len(set(cla)) == len(cla)
+    assert len(set(clb)) == len(clb)
+
+    for (x_name, clx), (y_name, cly) in ((('a', cla), ('b', clb)),):
+        for x in clx:
+            if x not in cly:
+                sys.stderr.write(f'{" "*log_indent}error: cl{x_name} (chapters_list_{x_name}) contains "{x}"\n') 
+                sys.stderr.write(f'{" "*(log_indent+4)}but cl{y_name} list does not and rather contains only:\n') 
+                for y in cly: 
+                    sys.stderr.write(f'{" "*(log_indent+8)}{y}\n') 
+                sys.exit(error_exit_status) 
+   
+    assert len(cla) <= len(clb) 
+    assert set(cla).issubset(clb)
+
+    return None
+
+
 
 def get_includeonly() -> list:
     '''
