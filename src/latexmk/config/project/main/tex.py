@@ -234,7 +234,7 @@ def get_includeonly() -> list:
     io_chapters_str = io_chapters_str.replace(end_str  , '')
     io_chapters_str = io_chapters_str.replace('%'      , '')
 
-    if '' == all_chapters_str.strip():
+    if '' == io_chapters_str.strip():
         io_chapters_list = []
     else:
         io_chapters_list = [ch.strip() for ch in io_chapters_str.split(',')]
