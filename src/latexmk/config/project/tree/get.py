@@ -329,8 +329,8 @@ def get_project_tree() -> dict:
                     assert os.path.isfile(ssfp), (sec_file_path, line_idx, line, ssfp)
                     assert 0 < os.path.getsize(ssfp), (sec_file_path, line_idx, line, ssfp)
 
-                    assert ssfn not in sd, ([k in sd.keys()], ssfn)
-                    sd[ssfn] = \
+                    assert ssfn not in subsecs, ([k in subsecs.keys()], ssfn)
+                    subsecs[ssfn] = \
                         {
                             'subsec_is_leaf'  : True,
                             'subsec_file_path': ssfp
@@ -371,8 +371,8 @@ def get_project_tree() -> dict:
                     assert os.path.isfile(ssfp), ssfp
                     assert 0 < os.path.getsize(ssfp), ssfp
 
-                    assert ssfn not in sd, ([k in sd.keys()], ssfn)
-                    sd[ssfn] = \
+                    assert ssfn not in subsecs, ([k in subsecs.keys()], ssfn)
+                    subsecs[ssfn] = \
                         {
                             'subsec_is_leaf'  : False,
                             'subsec_file_path': ssfp,
