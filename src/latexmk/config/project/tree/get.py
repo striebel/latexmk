@@ -43,7 +43,7 @@ def get_project_tree() -> dict:
         assert os.path.isdir(cdp), cdp
 
         # cfp: chapter file path
-        cfp = os.path.join(cdp, f'{cfn}.tex')
+        cfp = ch_file_path = os.path.join(cdp, f'{cfn}.tex')
         assert os.path.isfile(cfp), cfp
         assert 0 < os.path.getsize(cfp), cfp
 
@@ -55,6 +55,9 @@ def get_project_tree() -> dict:
         assert 0 < len(ch_file_str), (ch_file_str, len(ch_file_str))
         if '\n' == ch_file_str[-1:]:
             ch_file_str = ch_file_str[:-1]
+
+        ch_file_str = ch_file_str.replace('%\\input{', '\\input{')
+
 
         ch_file_lines = ch_file_str.split('\n')
         assert 1 < len(ch_file_lines), (ch_file_lines, len(ch_file_lines))
@@ -96,7 +99,6 @@ def get_project_tree() -> dict:
             if '' == line:
                 continue
 
-            
             assert '\\input{' == line[:7], (ch_file_path, line_idx, line[:7])
             assert '}' == line[-1:], (ch_file_path, line_idx, line[-1:])
 
@@ -252,6 +254,8 @@ def get_project_tree() -> dict:
             assert 0 < len(sec_str)
             if '\n' == sec_str[-1:]:
                 sec_str = sec_str[:-1]
+
+            sec_str = sec_str.replace('%\\input{', '\\input{')
             
             sec_lines = sec_str.split('\n')
             assert 1 < len(sec_lines)
