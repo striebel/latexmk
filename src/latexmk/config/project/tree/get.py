@@ -7,6 +7,8 @@ from .. import get_build_dir_path
 from ..main.tex import get_includes
 
 
+INIT = 'init'
+
 
 def get_project_tree() -> dict:
 
@@ -36,7 +38,11 @@ def get_project_tree() -> dict:
         cdn, cfn = cdn__cfn
         del cdn__cfn
 
-        assert cdn == cfn, (cdn, cfn)
+        assert isinstance(cdn, str), type(cdn)
+        assert isinstance(cfn, str), type(cfn)
+        assert 0 < len(cdn)
+        assert 0 < len(cfn)
+        assert INIT == cfn, (INIT, cfn)
 
         # cdp: chapter dir path
         cdp = os.path.join(build_dir_path, cdn)
@@ -84,11 +90,15 @@ def get_project_tree() -> dict:
         cl = ch_file_lines[2][7:-1]
         del cl
 
-        
-        assert cfn not in pt, ([k for k in pt.keys()], cfn)
-        pt[cfn] = \
+
+        # pt : project tree
+        # cfn: chapter file name
+        assert cdn not in pt, ([k for k in pt.keys()], cdn)
+        pt[cdn] = \
             {
+                'ch_is_leaf'  : False,
                 'ch_file_path': cfp,
+                'ch_dir_path' : cdp
                 'secs'        : dict()
             }
         
@@ -137,8 +147,9 @@ def get_project_tree() -> dict:
                 assert os.path.isfile(sfp), sfp
                 assert 0 < os.path.getsize(sfp), sfp
 
-                assert sfn not in pt[cfn]['secs'], sfn
-                pt[cfn]['secs'][sfn] = \
+                
+                assert sfn not in pt[cdn]['secs'], sfn
+                pt[cdn]['secs'][sfn] = \
                     {
                         'sec_is_leaf'  : True,
                         'sec_file_path': sfp,
@@ -158,8 +169,11 @@ def get_project_tree() -> dict:
                 assert 0 == len(ipc), len(ipc)
                 del ipc
 
-                assert sdn == sfn, (sdn, sfn)
-
+                assert isinstance(sdn, str), type(sdn)
+                assert isinstance(sfn, str), type(sfn)
+                assert 0 < len(sdn)
+                assert 0 < len(sfn)
+                assert INIT == sfn, (INIT, sfn)
 
                 assert '.tex' not in sfn, (ch_file_path, line_idx, line, sfn)
                 assert 'sfn_tex' not in locals()
@@ -181,8 +195,8 @@ def get_project_tree() -> dict:
                 assert os.path.isfile(sfp), sfp
                 assert 0 < os.path.getsize(sfp)
 
-                assert sfn not in pt[cfn]['secs'], sfn
-                pt[cfn]['secs'][sfn] = \
+                assert sdn not in pt[cdn]['secs'], sdn
+                pt[cdn]['secs'][sdn] = \
                     {
                         'sec_is_leaf'  : False,
                         'sec_file_path': sfp,
@@ -195,30 +209,37 @@ def get_project_tree() -> dict:
 
 
     # pt : project tree
+    # cn : chapter      name
+    # cdn: chapter dir  name
     # cfn: chapter file name
     # cd : chapter dict
+    # sn : section      name
+    # sdn: section dir  name
+    # sfn: section file name
+    assert 'pt'      in locals()
+    assert 'cn'  not in locals()
+    assert 'cdn' not in locals()
     assert 'cfn' not in locals()
     assert 'cd'  not in locals()
-    for cfn, cd in pt.items():
-
-        # cdn: chapter dir name
-        cdn = cfn
+    assert 'sn'  not in locals()
+    assert 'sdn' not in locals()
+    assert 'sfn' not in locals()
+    for cn, cd in pt.items():
+#   BEGIN for cn, cd in pt.items()
+#   {
 
         assert 2 == len(cd), len(cd)
         assert 'ch_file_path' in cd
         assert 'secs' in cd
 
-        # sfn: section file name
-        # sd : section dict
-        assert 'sfn' not in locals()
+        # sn: section name
+        # sd: section dict
+        assert 'sn' not in locals()
         assert 'sd'  not in locals()
-        for sfn, sd in cd['secs'].items():
-
-            # sdn: section dir name
-            sdn = sfn
-
-            assert 2 <= len(sd), len(sd)
-            assert len(sd) <= 4, len(sd)
+        for sn, sd in cd['secs'].items():
+#       BEGIN for sn, sd in cd['secs'].items()
+#       {
+            assert len(sd) in (2, 4), len(sd)
 
             assert 'sec_is_leaf' in sd
             assert 'sec_file_path' in sd
@@ -227,7 +248,7 @@ def get_project_tree() -> dict:
 
                 assert 2 == len(sd), len(sd)
 
-                del sfn, sd
+                del sn, sd
 
                 continue
 
@@ -241,6 +262,7 @@ def get_project_tree() -> dict:
             sec_file_path = sd['sec_file_path']
             sec_dir_path  = sd['sec_dir_path' ]
             subsecs       = sd['subsecs'      ]
+            del sd
 
             assert isinstance(subsecs, dict), (subsecs, type(subsecs))
             assert 0 == len(subsecs), len(subsecs)
@@ -260,11 +282,11 @@ def get_project_tree() -> dict:
             sec_lines = sec_str.split('\n')
             assert 1 < len(sec_lines)
             
-            begin_str = f'% BEGIN src/{cdn}/{sdn}/{sfn}.tex'
+            begin_str = f'% BEGIN src/{cn}/{sn}/{INIT}.tex'
             assert begin_str == sec_lines[0], (sec_file_path, begin_str, sec_lines[0])
             del begin_str
 
-            end_str = f'% END src/{cdn}/{sdn}/{sfn}.tex'
+            end_str = f'% END src/{cn}/{sn}/{INIT}.tex'
             assert end_str == sec_lines[-1], (sec_file_path, end_str, sec_lines[-1])
             del end_str
 
@@ -279,7 +301,8 @@ def get_project_tree() -> dict:
             del sl
 
             for line_idx, line in enumerate(sec_lines[3:-1], start=3):
-                
+#           BEGIN for line in sec init file
+#           {
                 assert isinstance(line, str), (line, type(line))
 
                 if '' == line:
@@ -299,19 +322,22 @@ def get_project_tree() -> dict:
                 # _cdn: chapter dir name
                 assert '_cdn' not in locals()
                 _cdn = ipc.pop(0)
-                assert cdn == _cdn, (sec_file_path, line_idx, line, cdn, _cdn)
+                assert cn == _cdn, (sec_file_path, line_idx, line, cn, _cdn)
                 del _cdn
 
                 
                 # _sdn: section dir name 
                 assert '_sdn' not in locals()
                 _sdn = ipc.pop(0)
-                assert sdn == _sdn, (sec_file_path, line_idx, line, sdn, _sdn)
+                assert sn == _sdn, (sec_file_path, line_idx, line, sn, _sdn)
                 del _sdn
 
                 if 1 == len(ipc):
-
+#               BEGIN case where subsec is leaf
+#               {
+                    # ssn : subsection      name
                     # ssfn: subsection file name
+                    assert 'ssn'  not in locals()
                     assert 'ssfn' not in locals()
                     ssfn = ipc.pop(0)
 
@@ -319,10 +345,16 @@ def get_project_tree() -> dict:
                     del ipc
 
 
-                    assert '.tex' not in ssfn, (sec_file_path, line_idx, line, ssfn)
+                    assert '.tex' not in ssfn, (sec_file_path, line_idx, line, ssn)
+                    assert 'ssn'      not in locals()
+                    assert 'ssfn'         in locals()
+                    assert 'ssn_tex'  not in locals()
                     assert 'ssfn_tex' not in locals()
                     ssfn_tex = f'{ssfn}.tex'
-
+                    
+                    # ssn: subsection name
+                    ssn = ssfn
+                    del ssfn
 
                     assert os.path.isdir(sec_dir_path), sec_dir_path
 
@@ -332,33 +364,49 @@ def get_project_tree() -> dict:
                     del ssfn_tex
                     assert os.path.isfile(ssfp), (sec_file_path, line_idx, line, ssfp)
                     assert 0 < os.path.getsize(ssfp), (sec_file_path, line_idx, line, ssfp)
-
-                    assert ssfn not in subsecs, ([k in subsecs.keys()], ssfn)
-                    subsecs[ssfn] = \
+                    
+                    assert ssn not in subsecs, ([k for k in subsecs.keys()], ssn)
+                    subsecs[ssn] = \
                         {
                             'subsec_is_leaf'  : True,
                             'subsec_file_path': ssfp
                         }
-                    del ssfn, ssfp
+                    del ssn, ssfp
 
+#               }
+#               END case where subsec is leaf
                 else:
                     assert 2 == len(ipc)
-
+#               BEGIN case where subsec is *not* leaf
+#               {
+                    # ssn : subsection     name
                     # ssdn: subsection dir name
+                    assert 'ssn'  not in locals()
                     assert 'ssdn' not in locals()
                     ssdn = ipc.pop(0)
 
+                    # ssn : subsection      name
                     # ssfn: subsection file name
+                    assert 'ssn'  not in locals()
                     assert 'ssfn' not in locals()
                     ssfn = ipc.pop(0)
 
                     assert 0 == len(ipc), len(ipc)
                     del ipc
 
+
+                    assert isinstance(ssdn, str), type(ssdn)
+                    assert isinstance(ssfn, str), type(ssfn)
+                    assert 0 < len(ssdn)
+                    assert 0 < len(ssfn)
+                    assert INIT == ssfn, (INIT, ssfn)
+
+
                     assert '.tex' not in ssfn, (sec_file_path, line_idx, line, ssfn)
                     assert 'ssfn_tex' not in locals()
                     ssfn_tex = f'{ssfn}.tex'
-                    
+                    del ssfn
+
                     
                     assert os.path.isdir(sec_dir_path), sec_dir_path
 
@@ -375,17 +423,222 @@ def get_project_tree() -> dict:
                     assert os.path.isfile(ssfp), ssfp
                     assert 0 < os.path.getsize(ssfp), ssfp
 
-                    assert ssfn not in subsecs, ([k in subsecs.keys()], ssfn)
-                    subsecs[ssfn] = \
+
+                    assert 'ssn'  not in locals()
+                    assert 'ssdn'     in locals()
+                    ssn = ssdn
+                    del ssdn
+
+
+                    assert ssn not in subsecs, ([k for k in subsecs.keys()], ssn)
+                    subsecs[ssn] = \
                         {
                             'subsec_is_leaf'  : False,
                             'subsec_file_path': ssfp,
                             'subsec_dir_path' : ssdp,
                             'subsubsecs'      : dict(),
                         }
-                    del ssdn, ssfn, ssdp, ssfp
+                    del ssn, ssdp, ssfp
+#               }
+#               END case where subsec is *not* leaf
 
-            del sfn, sd
+#           }
+#           END for line in sec init file
+
+            del sn
+#       }
+#       END for sn, sd in cd['secs'].items()
+
+#   }
+#   END for cn, cd in pt.items()
+
+
+    # level-order traversal
+
+    # lhs : [current-]level headings
+    # nlhs: next-level      headings
+    # hn  : heading name
+    # hd  : heading dict
+    assert 'lhs'  not in locals()
+    assert 'nlhs' not in locals()
+    lhs  = [hn,hd for hn,hd in pt.items()]
+    nlhs = []
+
+    # lsn: level short name
+    # lln: level long  name
+    assert 'lsn_lln' not in locals()
+    lsn_lln = \
+        (
+            ('ch'       , 'chapter'      ),
+            ('sec'      , 'section'      ),
+            ('subsec'   , 'subsection'   ),
+            ('subsubsec', 'subsubsection'),
+            ('par'      , 'paragraph'    ),
+            ('subpar'   , 'subparagraph' ),
+        )
+
+    #  sn: [current level] short name
+    #  ln: [current level] long  name
+    # nsn: next    [level] short name
+    # nln: next    [level] long  name
+    assert  'sn' not in locals()
+    assert  'ln' not in locals()
+    assert 'nsn' not in locals()
+    assert 'nln' not in locals()
+    for (sn,ln),(nsn,nln) in zip(lsn_lln[:], lsn_lln[1:]):
+#   BEGIN for each level
+#   {
+        # hn : heading name
+        # hd : heading dict
+        # lhs: [current-]level headings
+        assert 'hn' not in locals()
+        assert 'hd' not in locals()
+        for hn, hd in lhs:
+#       BEGIN for each heading at current level
+#       {
+            # fpk: file path key
+            assert 'fpk' not in locals()
+            fpk = f'{sn}_file_path'
+            assert fpk in hd, ([k for k in hd], fpk)
+
+            # fp: file path
+            fp = hd[fpk]
+            del fpk
+            assert isinstance(fp, str)    , (csn, hn, type(fp))
+            assert os.path.isfile(fp)     , (csn, hn, fp)
+            assert 0 < os.path.getsize(fp), (csn, hn, fp)
+            del fp
+
+            # ilk: is leaf key
+            assert 'ilk' not in locals()
+            ilk = f'{sn}_is_leaf'
+            assert ilk in hd, ([k for k in hd], ilk)
+
+            # il: is leaf
+            il = hd[ilk]
+            del ilk
+            if il is True:
+                del il
+                assert 2 == len(hd), len(hd)
+                continue
+            assert il is False, il
+            del il
+            
+            assert 4 == len(hd), len(hd)
+            
+            # dpk: dir path key
+            assert 'dpk' not in locals()
+            dpk = f'{sn}_dir_path'
+            assert dpk in hd, ([k for k in hd], dpk)
+            
+            # dp: dir path
+            assert 'dp' not in locals()
+            dp = hd[dpk]
+            del dpk
+            assert isinstance(dp, str)     , (csn, hn, type(dp))
+            assert os.path.isdir(dp)       , (csn, hn, dp)
+            assert 2 <= len(os.listdir(dp)), (csn, hn, dp)
+            
+            #   hn   :          heading name
+            # onhn   : one next heading name
+            #   hd   :          heading dict
+            # onhd   : one next heading dict
+            #  nhscd :     next headings container dict
+            #  nhscdk:     next headings container dict key
+            assert 'nhscdk' not in locals()
+            nhscdk = f'{nsn}s'
+            assert nhscdk in hd, (csn, hn, [k for k in hd], nhscdk)
+            
+            # nhd: next heading dict
+            assert 'nhd' not in locals()
+            nhscd = hd[nhscdk]
+            del nhscdk
+            assert isinstance(nhscd, dict), (csn, hn, type(nhscd))
+            
+            if 0 < len(nhscd):
+                assert nsn in ('secs', 'subsecs')
+                assert len(nhscd) == len(os.listdir(dp)) - 1
+#           BEGIN case where next level has already been added
+#                 to the project tree
+#           {
+                # onhn   : one next heading name
+                # onhd   : one next heading dict
+                #  nhscd :     next headings container dict
+                # nlhs   : next-level headings
+                assert 'onhn'   not in locals()
+                assert 'onhd'   not in locals()
+                assert  'nhscd'     in locals()
+                assert 'nlhs'       in locals()
+                for onhn, onhd for nhscd.items():
+                    assert isinstance(onhn, str)
+                    assert isinstance(onhd, dict)
+                    nlhs.append((onhn,onhd))
+                    del onhn, onhd
+#           }
+#           END case where next level has already been added
+#               to the project tree
+            else:
+                assert 0 == len(nhscd)
+                assert nsn in ('subsubsecs', 'pars', 'subpars')
+#           BEGIN case where next level has *not* been added
+#                 to the project tree
+#           {
+                assert 1 == os.listdir(dp).count(f'{INIT}.tex')
+
+                # cn: child name
+                assert 'cn' not in locals()
+                for cn in os.listdir(dp):
+                    if f'{INIT}.tex' == cn:
+                        continue
+#               BEGIN for each sub heading in the heading dir
+#               {
+                    # cp: child path
+                    assert 'cp' not in locals()
+                    cp = os.path.join(dp, cn)
+                    if '.tex' == cp[-4:]:
+                        assert os.path.isfile(cp)
+
+                        assert cn[:-4] not in nhscd
+                        nhscd[cn[:-4]] = \
+                            {
+                                f'{nsn}_is_leaf'  : True,
+                                f'{nsn}_file_path': cp,
+                            }
+                    else:
+                        assert os.path.isdir(cp)
+
+                        # cfp: child file path
+                        assert 'cfp' not in locals()
+                        cfp = os.path.join(cp, f'{INIT}.tex')
+                        assert os.path.isfile(cfp), cfp
+
+                        assert cn not in nhscd
+                        nhscd[cn] = \
+                            {
+                                f'{nsn}_is_leaf'  : False,
+                                f'{nsn}_file_path': cfp,
+                                f'{nsn}_dir_path' : cp,
+                                f'{nnsn}s'        : dict(),
+                            }
+                        del cfp
+
+                    del cp
+                    del cn
+#               }
+#               END for each sub heading in the heading dir
+
+#           }
+#           END case where next level has *not* been added
+#               to the project tree
+            del dp
+            del hn, hd
+#       }
+#       END for each heading at current level
+        
+        del sn, ln, nsn, nln
+#   }
+#   END for each level
+
 
     assert isinstance(pt, dict), (pt, type(pt))
     assert 1 <= len(pt), (pt, len(pt))
