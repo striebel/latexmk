@@ -98,8 +98,8 @@ def get_project_tree() -> dict:
             {
                 'ch_is_leaf'  : False,
                 'ch_file_path': cfp,
-                'ch_dir_path' : cdp
-                'secs'        : dict()
+                'ch_dir_path' : cdp,
+                'secs'        : dict(),
             }
         
         for line_idx, line in enumerate(ch_file_lines[3:-1], start=3):
@@ -113,10 +113,12 @@ def get_project_tree() -> dict:
             assert '}' == line[-1:], (ch_file_path, line_idx, line[-1:])
 
             # ip: input path
+            assert 'ip' not in locals()
             ip = line[7:-1]
             
             # ipc: input path components
             ipc = ip.split('/')
+            del ip
             assert len(ipc) in (2, 3), (ipc, len(ipc))
 
             # _cdn: chapter dir name
@@ -146,7 +148,7 @@ def get_project_tree() -> dict:
                 del sfn_tex
                 assert os.path.isfile(sfp), sfp
                 assert 0 < os.path.getsize(sfp), sfp
-
+                
                 
                 assert sfn not in pt[cdn]['secs'], sfn
                 pt[cdn]['secs'][sfn] = \
@@ -205,6 +207,7 @@ def get_project_tree() -> dict:
                     }
                 del sdn, sfn, sdp, sfp
 
+        del cfp
         del cdn, cfn
 
 
@@ -227,10 +230,13 @@ def get_project_tree() -> dict:
     for cn, cd in pt.items():
 #   BEGIN for cn, cd in pt.items()
 #   {
-
-        assert 2 == len(cd), len(cd)
+        assert isinstance(cn, str), type(cn)
+        assert isinstance(cd, dict), type(cd)
+        assert 4 == len(cd), [k for k in cd]
+        assert 'ch_is_leaf'   in cd
         assert 'ch_file_path' in cd
-        assert 'secs' in cd
+        assert 'ch_dir_path'  in cd
+        assert 'secs'         in cd
 
         # sn: section name
         # sd: section dict
@@ -313,10 +319,12 @@ def get_project_tree() -> dict:
                 assert '}' == line[-1:], (sec_file_path, line_idx, line, line[-1:])
 
                 # ip: input path
+                assert 'ip' not in locals()
                 ip = line[7:-1]
                 
                 # ipc: input path components
                 ipc = ip.split('/')
+                del ip
                 assert len(ipc) in (3, 4), (ipc, len(ipc))
 
                 # _cdn: chapter dir name
@@ -449,6 +457,8 @@ def get_project_tree() -> dict:
 #       }
 #       END for sn, sd in cd['secs'].items()
 
+        del cn,cd
+
 #   }
 #   END for cn, cd in pt.items()
 
@@ -461,7 +471,7 @@ def get_project_tree() -> dict:
     # hd  : heading dict
     assert 'lhs'  not in locals()
     assert 'nlhs' not in locals()
-    lhs  = [hn,hd for hn,hd in pt.items()]
+    lhs  = [(hn,hd) for hn,hd in pt.items()]
     nlhs = []
 
     # lsn: level short name
@@ -475,17 +485,25 @@ def get_project_tree() -> dict:
             ('subsubsec', 'subsubsection'),
             ('par'      , 'paragraph'    ),
             ('subpar'   , 'subparagraph' ),
+            ('subsubpar', None           ),
         )
 
-    #  sn: [current level] short name
-    #  ln: [current level] long  name
-    # nsn: next    [level] short name
-    # nln: next    [level] long  name
-    assert  'sn' not in locals()
-    assert  'ln' not in locals()
-    assert 'nsn' not in locals()
-    assert 'nln' not in locals()
-    for (sn,ln),(nsn,nln) in zip(lsn_lln[:], lsn_lln[1:]):
+    #   li:      [current]level index
+    #   sn:      [current level] short name
+    #   ln:      [current level] long  name
+    #  nsn:      next    [level] short name
+    #  nln:      next    [level] long  name
+    # nnsn: next next    [level] short name
+    # nnln: next next    [level] long  name
+    assert   'sn' not in locals()
+    assert   'ln' not in locals()
+    assert  'nsn' not in locals()
+    assert  'nln' not in locals()
+    assert 'nnsn' not in locals()
+    assert 'nnln' not in locals()
+    for li,((sn,ln),(nsn,nln),(nnsn,nnln)) in enumerate(
+        zip(lsn_lln,lsn_lln[1:],lsn_lln[2:])
+    ):
 #   BEGIN for each level
 #   {
         # hn : heading name
@@ -520,6 +538,9 @@ def get_project_tree() -> dict:
             if il is True:
                 del il
                 assert 2 == len(hd), len(hd)
+
+                del hn, hd
+
                 continue
             assert il is False, il
             del il
@@ -556,48 +577,45 @@ def get_project_tree() -> dict:
             assert isinstance(nhscd, dict), (csn, hn, type(nhscd))
             
             if 0 < len(nhscd):
-                assert nsn in ('secs', 'subsecs')
-                assert len(nhscd) == len(os.listdir(dp)) - 1
+                assert nsn in ('sec', 'subsec'), nsn
+                assert 1 <= len(nhscd)
+                assert len(nhscd) <= len(os.listdir(dp)) - 1
 #           BEGIN case where next level has already been added
 #                 to the project tree
 #           {
-                # onhn   : one next heading name
-                # onhd   : one next heading dict
-                #  nhscd :     next headings container dict
-                # nlhs   : next-level headings
-                assert 'onhn'   not in locals()
-                assert 'onhd'   not in locals()
-                assert  'nhscd'     in locals()
-                assert 'nlhs'       in locals()
-                for onhn, onhd for nhscd.items():
-                    assert isinstance(onhn, str)
-                    assert isinstance(onhd, dict)
-                    nlhs.append((onhn,onhd))
-                    del onhn, onhd
+                pass
 #           }
 #           END case where next level has already been added
 #               to the project tree
             else:
                 assert 0 == len(nhscd)
-                assert nsn in ('subsubsecs', 'pars', 'subpars')
+                assert nsn in ('subsubsec', 'par', 'subpar')
 #           BEGIN case where next level has *not* been added
 #                 to the project tree
 #           {
                 assert 1 == os.listdir(dp).count(f'{INIT}.tex')
-
+                
                 # cn: child name
-                assert 'cn' not in locals()
+                assert 'cn' not in locals(), cn
                 for cn in os.listdir(dp):
                     if f'{INIT}.tex' == cn:
+                        del cn
                         continue
-#               BEGIN for each sub heading in the heading dir
-#               {
+
                     # cp: child path
                     assert 'cp' not in locals()
                     cp = os.path.join(dp, cn)
-                    if '.tex' == cp[-4:]:
-                        assert os.path.isfile(cp)
+                    if os.path.isfile(cp) and '.tex' != cp[-4:]:
+                        del cn
+                        del cp
+                        continue
+#               BEGIN for each sub heading in the heading dir
+#               {
+                    if os.path.isfile(cp):
+                        assert '.tex' == cp[-4:], cp
 
+                        # onhn: one next heading name
+                        # onhd: one next heading dict
                         assert cn[:-4] not in nhscd
                         nhscd[cn[:-4]] = \
                             {
@@ -630,12 +648,112 @@ def get_project_tree() -> dict:
 #           }
 #           END case where next level has *not* been added
 #               to the project tree
+
+            assert 1 <= len(nhscd)
+            assert len(nhscd) <= len(os.listdir(dp)) - 1
+
+            #BEGIN add each next-level heading to the
+            #      next-level headings list
+
+            # onhn   : one next heading name
+            # onhd   : one next heading dict
+            #  nhscd :     next headings container dict
+            # nlhs   : next-level headings
+            assert 'onhn'   not in locals()
+            assert 'onhd'   not in locals()
+            assert  'nhscd'     in locals()
+            assert 'nlhs'       in locals()
+            for onhn, onhd in nhscd.items():
+                assert isinstance(onhn, str)
+                assert isinstance(onhd, dict)
+                nlhs.append((onhn,onhd))
+                del onhn, onhd
+
+            #END add each next-level heading to the
+            #    next-level headings list
+
+
+            #BEGIN confirm that the contents of the
+            #      next headings container dict matches
+            #      the init file in the current heading dir
+
+            # fp: file path
+            # dp: dir  path
+            assert 'fp' not in locals()
+            assert 'dp'     in locals()
+            fp = os.path.join(dp, f'{INIT}.tex')
+            assert os.path.isfile(fp), (sn,hn,fp)
+
+            # fo : file object
+            # fls: file lines
+            assert 'fo'  not in locals() 
+            assert 'fls' not in locals()
+            with open(fp, 'rt') as fo:
+                fls = [fl for fl in fo]
+            del fo
+            assert isinstance(fls, list), type(fls)
+            assert 5 <= len(fls)
+            assert 'fl' not in locals()
+            for fl in fls:
+                assert isinstance(fl, str), type(fl)
+                del fl
+
+            assert '% BEGIN src/' == fls[ 0][:len('% BEGIN src/')], fls[ 0]
+            assert '% END src/'   == fls[-1][:len('% END src/'  )], fls[-1]
+
+            assert f'/{INIT}.tex\n' == fls[ 0][-len(f'/{INIT}.tex\n'):], fls[ 0]
+            assert f'/{INIT}.tex\n' == fls[-1][-len(f'/{INIT}.tex\n'):], fls[-1]
+            
+            # ln: [current level] long name 
+            assert f'\\{ln}{{' == fls[1][:len(f'\\{ln}{{')], fls[1]
+            assert '}\n'       == fls[1][-2:]              , fls[1]
+            
+            assert '\\label{' == fls[2][:len('\\label{')], fls[2]
+            assert '}\n'      == fls[2][-2:]             , fls[2]
+
+
+            # nhscd: next headings container dict
+            # ips  : input paths
+            assert 'ips' not in locals()
+            ips = []
+
+            # fls: file lines
+            # fl : file line
+            assert 'fl' not in locals()
+            for fl in fls[3:-1]:
+                if '\n' == fl:
+                    del fl
+                    continue
+                #
+                assert '\\input{' == fl[           :len('\\input{')], fl
+                assert '}\n'      == fl[-len('}\n'):               ], fl
+
+                # ip: input path
+                assert 'ip' not in locals(), ip
+                ip = fl[len('\\input{'):-len('}\n')]
+
+                ips.append(ip)
+                del ip
+
+                del fl
+            del fls
+
+            assert len(ips) == len(nhscd), (len(ips), len(nhscd))
+            del ips, nhscd
+
+            #END confirm that the contents of the
+            #    next headings container dict matches
+            #    the init file in the current heading dir
+
             del dp
             del hn, hd
 #       }
 #       END for each heading at current level
+
+        lhs = nlhs
+        nlhs = []
         
-        del sn, ln, nsn, nln
+        del li,sn,ln,nsn,nln,nnsn,nnln
 #   }
 #   END for each level
 
