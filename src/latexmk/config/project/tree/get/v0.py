@@ -2,12 +2,11 @@ import sys
 import os
 import pprint
 
-from .. import get_build_dir_path
+from ... import get_build_dir_path
 
-from ..main.tex import get_includes
+from ...main.tex import get_includes
 
-
-INIT = 'init'
+from .. import INIT
 
 
 def get_project_tree() -> dict:
@@ -463,7 +462,8 @@ def get_project_tree() -> dict:
 #   END for cn, cd in pt.items()
 
 
-    # level-order traversal
+
+    #BEGIN level-order tree traversal
 
     # lhs : [current-]level headings
     # nlhs: next-level      headings
@@ -757,6 +757,7 @@ def get_project_tree() -> dict:
 #   }
 #   END for each level
 
+    #END level-order tree traversal
 
     assert isinstance(pt, dict), (pt, type(pt))
     assert 1 <= len(pt), (pt, len(pt))
