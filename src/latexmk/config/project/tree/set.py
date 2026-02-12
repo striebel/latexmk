@@ -1,106 +1,126 @@
 import os
 
+from . import INIT
 
 
-def toggle_input_macros(input_macros_config: dict) -> None:
+def toggle_input_macros(input_macros_config: list) -> None:
 
-    imc = input_macros_config; del input_macros_config
+    imc = input_macros_config
+    del input_macros_config
 
+    assert isinstance(imc, list), type(imc)
+    assert 3 == len(imc), len(imc)
 
-    # ct : chapter type
-    # ctd: chapter type dict
-    for ct, ctd in imc.items():
+    # fu: files to update
+    fu = {}
 
-        # cn: chapter name
-        # cd: chapter dict
-        for cn, cd in ctd.items():
+    # tlhs: this-level headings [list]
+    # hlns: heading level names [list]
+    def preorder_traversal_of_imc_to_construct_fu(fu,tlhs,hlns) -> None:
+        assert isinstance(fu,dict),type(fu)
+        assert isinstance(tlhs,list),type(tlhs)
+        assert isinstance(hlns,tuple),type(hlns)
 
-            cfp = cd.pop('ch_file_path')
-            assert os.path.isfile(cfp), cfp
-            with open(cfp, 'rt') as cf:
-                # cfs : chapter file str
-                cfs = cf.read()
-            del cf
+        assert 1 <= len(hlns)
+        if 1 == len(hlns):
+            assert 0 == len(tlhs), len(tlhs)
 
-            assert 1 <= len(cd), len(cfp, len(cd))
-            assert len(cd) == cfs.count('\\input{'), \
-                (cfp, len(cd), cfs.count('\\input{'))
+        # hipp: heading input path partial
+        # hd  : config heading dict
+        for hipp,chd in tlhs:
+            assert isinstance(hipp,str),type(hipp)
+            assert isinstance(chd,dict),type(chd)
 
-            # sns: section name suffix
-            # sd : section dict
-            for sns, sd in cd.items():
+            assert 4 == len(chd),len(chd)
+            it   = chd['input_toggle']
+            ifp  = chd['input_file_path']
+            imp  = chd['input_macro_path']
+            nlhs = chd[f'{ hlns[1] }s']
+            del chd
 
-                # ip: input (do not comment out the input macro)
-                ip = sd.pop('input')
-                assert ip in (True, False), ip
+            assert it in (True,False), it
+            assert isinstance(ifp,str),type(ifp)
+            assert 0 < len(ifp)
+            assert os.path.isfile(ifp),ifp
+            assert 0 < os.path.getsize(ifp),ifp
+            assert isinstance(imp,str),type(imp)
+            assert 0 < len(imp)
+            assert isinstance(nlhs,list),type(nlhs)
 
-                sfp = sd.pop('sec_file_path')
-                assert os.path.isfile(sfp), sfp
+            if it is False:
+                if ifp not in fu:
+                    fu[ifp] = []
+                assert imp not in fu[ifp]
+                fu[ifp].append(imp)
 
-                sip = sd.pop('sec_input_path')
+            preorder_traversal_of_imc_to_construct_fu(
+                fu   = fu,
+                tlhs = nlhs,
+                hlns = hlns[1:],
+            )
+             
+    
+    # ct: chapter type
+    for ct,cts in imc:
+        # cn: chapter name [short]
+        for cn,cns in cts:
+            preorder_traversal_of_imc_to_construct_fu(
+                fu   = fu,
+                tlhs = cns,
+                hlns = ('sec','subsec','subsubsec','par','subpar')
+            )
 
-                assert sip in cfs, sip
+    # fu  : files to update
+    # ifp : input file path
+    # imps: input macro paths [list]
+    assert 'ifp'  not in locals()
+    assert 'imps' not in locals()
+    for ifp,imps in fu.items():
+#   BEGIN for each file to update
+#   {
+        assert isinstance(imps,list),type(imps)
+        assert 0 < len(imps)
 
-                # sim: section input macro
-                sim = f'\\input{"{"}{sip}{"}"}\n'
+        assert isinstance(ifp,str),type(ifp)
+        assert 0 < len(ifp)
+        assert f'{INIT}.tex' == os.path.basename(ifp),ifp
+        assert os.path.isfile(ifp),ifp
+        assert 0 < os.path.getsize(ifp),ifp
+        assert '/build/' in ifp,ifp
+        #  ifo:          input file object
+        #  ifs:          input file str
+        # oifs: original input file str
+        with open(ifp,'rt') as ifo:
+            oifs = ifs = ifo.read()
+        del ifo
+        assert isinstance(ifs,str),type(ifs)
+        assert 0 < len(ifs)
+        assert 'imp' not in locals()
+        for imp in imps:
+#       BEGIN for each macro to comment out
+#       {
+            # im : input macro
+            # imo: input macro [toggled] off
+            im  =  f'\n\\input{{{imp}}}\n'
+            imo = f'\n%\\input{{{imp}}}\n'
+            del imp
+            assert 1 == ifs.count(im)
+            ifs = ifs.replace(im,imo)
+            assert 0 == ifs.count(im)
+            assert 1 == ifs.count(imo)
+            del im,imo
+#       }
+#       END for each macro to comment out
+        assert len(oifs) + len(imps) == len(ifs)
+        del oifs,imps
+        with open(ifp,'wt') as ifo:
+            ifo.write(ifs)
+        del ifo
+        del ifs
+        del ifp
+#   }
+#   END for each file to update
 
-                assert sim in cfs, sim
-
-                if ip is True:
-                    pass
-                else:
-                    assert ip is False, ip
-                    cfs = cfs.replace(sim, f'%{sim}')
-
-                
-                if 'subsecs' not in sd:
-                    continue
-                
-                
-                with open(sfp, 'rt') as sf:
-                    # sfs: section file str
-                    sfs = sf.read()
-                del sf
-
-                subsecs = sd.pop('subsecs')
-                assert 0 == len(sd), len(sd)
-                del sd
-                
-                assert 1 <= len(subsecs), len(subsecs)
-                assert len(subsecs) == sfs.count('\\input{')
-
-                # ssns: subsection name suffix
-                # ssd : subsection dict
-                for ssns, ssd in subsecs.items():
-
-                    # ipss: input subsection
-                    ipss = ssd.pop('input')
-                    assert ipss in (True, False), ipss
-
-                    # subsection input path
-                    ssip = ssd.pop('subsec_input_path')
-
-                    assert ssip in sfs, ssip
-
-                    # ssim: subsection input macro
-                    ssim = f'\\input{"{"}{ssip}{"}"}\n'
-
-                    assert ssim in sfs, ssim
-
-                    if ipss is True:
-                        pass
-                    else:
-                        assert ipss is False
-                        sfs = sfs.replace(ssim, f'%{ssim}')
-
-
-                with open(sfp, 'wt') as sf:
-                    sf.write(sfs)
-                del sfs, sf, sfp
-
-            with open(cfp, 'wt') as cf:
-                cf.write(cfs)
-            del cfs, cf, cfp
 
     return None
 

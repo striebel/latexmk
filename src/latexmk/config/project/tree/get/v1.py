@@ -455,7 +455,9 @@ def get_project_tree() -> list:
             assert len(nhscd) == len(nhscl)
             del nhscl
 
-            assert len(nhscd) == len(chn_t)
+            # chn_t: child heading name to type
+            assert len(nhscd) == len(chn_t), \
+                (nhscd, chn_t, len(nhscd), len(chn_t))
 
             # chn: child heading name
             # t  : type

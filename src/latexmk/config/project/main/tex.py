@@ -143,7 +143,7 @@ def get_includes() -> list:
 
 
 
-def assert_chapters_lists_equal(cla, clb, log_indent=0, error_exit_status=3) -> None:
+def assert_chapters_lists_equal(cla, clb, log_indent=0) -> None:
     '''
     cla : chapters_list_a
     clb : chapters_list_b
@@ -159,12 +159,14 @@ def assert_chapters_lists_equal(cla, clb, log_indent=0, error_exit_status=3) -> 
         (('b', clb), ('a', cla))
     ):
         for x in clx: 
-            if not x in cly: 
-                sys.stderr.write(f'{" "*log_indent}error: cl{x_name} (chapters_list_{x_name}) contains "{x}"\n') 
-                sys.stderr.write(f'{" "*(log_indent+4)}but cl{y_name} list does not and rather contains only:\n') 
+            if not x in cly:
+                # em: error message
+                em = ''
+                em += f'{" "*log_indent}error: cl{x_name} (chapters_list_{x_name}) contains "{x}"\n'
+                em += f'{" "*(log_indent+4)}but cl{y_name} list does not and rather contains only:\n'
                 for y in cly: 
-                    sys.stderr.write(f'{" "*(log_indent+8)}{y}\n') 
-                sys.exit(error_exit_status) 
+                    em += f'{" "*(log_indent+8)}{y}\n'
+                raise RuntimeError(em)
    
     assert len(cla) == len(clb) 
     assert cla == clb
@@ -173,7 +175,7 @@ def assert_chapters_lists_equal(cla, clb, log_indent=0, error_exit_status=3) -> 
 
 
 
-def assert_chapters_list_is_subset_of(cla, clb, log_indent=0, error_exit_status=4) -> None:
+def assert_chapters_list_is_subset_of(cla, clb, log_indent=0) -> None:
     '''
     cla : chapters_list_a
     clb : chapters_list_b
@@ -190,11 +192,13 @@ def assert_chapters_list_is_subset_of(cla, clb, log_indent=0, error_exit_status=
     for (x_name, clx), (y_name, cly) in ((('a', cla), ('b', clb)),):
         for x in clx:
             if x not in cly:
-                sys.stderr.write(f'{" "*log_indent}error: cl{x_name} (chapters_list_{x_name}) contains "{x}"\n') 
-                sys.stderr.write(f'{" "*(log_indent+4)}but cl{y_name} list does not and rather contains only:\n') 
+                # em: error message
+                em = ''
+                em += f'{" "*log_indent}error: cl{x_name} (chapters_list_{x_name}) contains "{x}"\n'
+                em += f'{" "*(log_indent+4)}but cl{y_name} list does not and rather contains only:\n'
                 for y in cly: 
-                    sys.stderr.write(f'{" "*(log_indent+8)}{y}\n') 
-                sys.exit(error_exit_status) 
+                    em += f'{" "*(log_indent+8)}{y}\n'
+                raise RuntimeError(em)
    
     assert len(cla) <= len(clb) 
     assert set(cla).issubset(clb)

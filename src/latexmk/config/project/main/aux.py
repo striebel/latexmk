@@ -2,6 +2,7 @@ import os
 
 from .. import get_build_main_aux_file_path
 
+from .tex import assert_chapters_list_is_subset_of
 
 
 def set_atinputs(includeonly_chapters_list, include_chapters_list) -> None:
@@ -16,7 +17,9 @@ def set_atinputs(includeonly_chapters_list, include_chapters_list) -> None:
     assert isinstance(includeonly_chapters_list, list)
     assert isinstance(include_chapters_list, list)
 
-    assert set(includeonly_chapters_list).issubset(include_chapters_list)
+    assert assert_chapters_list_is_subset_of(
+        includeonly_chapters_list, include_chapters_list
+    ) is None
 
     build_main_aux_file_path = get_build_main_aux_file_path()
     assert os.path.isfile(build_main_aux_file_path), build_main_aux_file_path
