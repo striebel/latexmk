@@ -7,6 +7,7 @@
 import sys
 import os
 import pprint
+import textwrap
 
 from ... import get_build_dir_path
 
@@ -24,6 +25,9 @@ def get_project_tree() -> list:
     build_dir_path = get_build_dir_path()
     assert os.path.isdir(build_dir_path), build_dir_path
 
+    
+    #BEGIN construct the first level of the project tree list (ptl);
+    #      i.e., the chapters
 
     includes = get_includes()
 
@@ -79,8 +83,14 @@ def get_project_tree() -> list:
         ptl.append((cn,cd))
         del cn,cd
 
+    #END construct the first level of the project tree list (ptl);
+    #    i.e., the chapters
 
-    #BEGIN level-order tree traversal
+
+
+    #(1) BEGIN level-order tree traversal of the build dir in order
+    #          to construct the ptl (project tree list) python data
+    #          structure
 
     # lhs : [current-]level headings
     # nlhs: next-level      headings
@@ -120,7 +130,7 @@ def get_project_tree() -> list:
     assert 'nnln' not in locals()
     for (sn,ln),(nsn,nln),(nnsn,nnln) in \
         zip(lsn_lln,lsn_lln[1:],lsn_lln[2:]):
-#   BEGIN for each level
+#   (1) BEGIN for each level
 #   {
         # hipp: heading input path, partial
         # hd  : heading dict
@@ -128,7 +138,7 @@ def get_project_tree() -> list:
         assert 'hipp' not in locals()
         assert 'hd'   not in locals()
         for hipp, hd in lhs:
-#       BEGIN for each heading at current level
+#       (1.1) BEGIN for each heading at current level
 #       {
             # fpk: file path key
             assert 'fpk' not in locals()
@@ -194,11 +204,17 @@ def get_project_tree() -> list:
 
 
 
-            #BEGIN read the init file for the current heading
-            #      and add each of the input macro paths to the
-            #      nhscl (next headings container list)
-            #      and the
-            #      nlhs (next-level headings [list])
+            #(1.1.1) BEGIN read the init file for the current heading
+            #              and add each of the input macro paths both to the
+            #              nhscl (next headings container list),
+            #                  in order to connect each new heading node
+            #                  to its parent in
+            #                  overall ptl (project tree list),
+            #              and to the
+            #              nlhs (next-level headings [list]),
+            #                  in order to have a flat list of all headings
+            #                  at the next level to iterate over in this loop
+            #                  during the next iteration of the outer loop
 
 
             # fp: file path
@@ -383,24 +399,41 @@ def get_project_tree() -> list:
             del ips
 
 
-            #END read the init file for the current heading
-            #    and add each of the input macro paths to the
-            #    nhscl (next headings container list)
-            #    and the
-            #    nlhs (next-level headings [list])
+            #(1.1.1) END read the init file for the current heading
+            #            and add each of the input macro paths both to the
+            #            nhscl (next headings container list),
+            #                in order to connect each new heading node
+            #                to its parent in
+            #                overall ptl (project tree list),
+            #            and to the
+            #            nlhs (next-level headings [list]),
+            #                in order to have a flat list of all headings
+            #                at the next level to iterate over in this loop
+            #                during the next iteration of the outer loop
 
 
 
-            #BEGIN now that the init file has been read,
-            #      confirm that the contents of the heading dir
-            #      agree with what was in the init file
+            #(1.1.2) BEGIN now that the init file has been read,
+            #              confirm that the contents of the heading dir
+            #              agree with what was in the init file
 
 
             assert 1 <= len(nhscl)
-            assert len(nhscl) <= len(os.listdir(dp)) - 1
+            assert len(nhscl) <= len(os.listdir(dp)) - 1, \
+                textwrap.dedent(
+                    f'''\
+                    There are more subheadings specified in the {INIT}.tex
+                    file than there are files and subdirs in the heading dir:
+                    {dp}'''
+                ).replace('\n', ' ')
 
             assert 1 == os.listdir(dp).count(f'{INIT}.tex')
 
+
+            #(1.1.2.1) BEGIN
+            #    Create the chn_t (child heading name to type) dict
+            #    and populate it with all the child headings present in
+            #    the current heading dir
 
             # chn_t: child heading name to type
             assert 'chn_t' not in locals()
@@ -408,6 +441,7 @@ def get_project_tree() -> list:
 
             # cn: child name
             #     (the "child" may be a file or dir)
+            # dp: [current heading] dir path
             assert 'cn' not in locals(), cn
             for cn in os.listdir(dp):
 #           BEGIN for each file/dir name in the heading dir
@@ -449,6 +483,13 @@ def get_project_tree() -> list:
 #           END for each file/dir in the heading dir
 
 
+            #(1.1.2.1) END
+            #    Create the chn_t (child heading name to type) dict
+            #    and populate it with all the child headings present in
+            #    the current heading dir
+
+
+
             # nhscd: next headings container dict
             assert 'nhscd' not in locals()
             nhscd = {chipp:chd for chipp,chd in nhscl}
@@ -456,8 +497,20 @@ def get_project_tree() -> list:
             del nhscl
 
             # chn_t: child heading name to type
+            assert 1 <= len(nhscd)
+            assert len(nhscd) <= len(chn_t)
             assert len(nhscd) == len(chn_t), \
-                (nhscd, chn_t, len(nhscd), len(chn_t))
+                textwrap.dedent(
+                    f'''\
+                    There are fewer subheadings
+                    ({len(nhscd)} exist in total)
+                    specified in the {INIT}.tex file
+                    than there are .tex files and subdirs
+                    ({len(chn_t)} exist in total)
+                    in the current heading dir
+                    (we expect the two to be equal):
+                    check the dir: {dp}'''
+                ).replace('\n', ' ')
 
             # chn: child heading name
             # t  : type
@@ -491,9 +544,9 @@ def get_project_tree() -> list:
 
             del chn_t
 
-            #END now that the init file has been read,
-            #    confirm that the contents of the heading dir
-            #    agree with what was in the init file
+            #(1.1.2) END now that the init file has been read,
+            #            confirm that the contents of the heading dir
+            #            agree with what was in the init file
 
 
             # dp: [current heading] dir path
@@ -503,7 +556,7 @@ def get_project_tree() -> list:
             # hd  : [current] heading dict
             del hipp, hd
 #       }
-#       END for each heading at current level
+#       (1.1) END for each heading at current level
 
         #  lhs: [current-]level headings
         # nlhs:     next- level headings
@@ -512,14 +565,16 @@ def get_project_tree() -> list:
         
         del sn,ln,nsn,nln,nnsn,nnln
 #   }
-#   END for each level
-
-    #END level-order tree traversal
+#   (1) END for each level
 
 
     # ptl: project tree list
     assert isinstance(ptl, list), (ptl, type(ptl))
     assert 1 <= len(ptl), (ptl, len(ptl))
+
+    #(1) END level-order tree traversal of the build dir in order
+    #        to construct the ptl (project tree list) python data
+    #        structure
       
     return ptl
 
